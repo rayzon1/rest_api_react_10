@@ -100,7 +100,7 @@ router.put(
     check("title")
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage("Please provide a value for title"),
-    check("title")
+    check("description")
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage("Please provide a value for description.")
   ],
