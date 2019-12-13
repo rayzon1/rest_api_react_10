@@ -50,6 +50,9 @@ router.post(
     check("password")
       .exists({ checkNull: true, checkFalsy: true })
       .withMessage("Please provide a password."),
+    check("confirmPassword")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage("Please confirm your password."),
     body('emailAddress')
       .custom(value => {
         return User.findAll({ where: {emailAddress: value}}).then(email => {
@@ -57,7 +60,14 @@ router.post(
             return Promise.reject('E-mail already in use');
           }
         })
-      })
+      }),
+    body('confirmPassword')
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error('Password confirmation does not match password');
+        }    
+        return true;
+      }),
     
   ],
   asyncHandler(async (req, res) => {
@@ -70,12 +80,19 @@ router.post(
    
     try {
       const user = req.body;
-      user.password = bcryptjs.hashSync(user.password);
-      await User.create(req.body);
+      if(user.password === user.confirmPassword) {
+        user.password = bcryptjs.hashSync(user.password);
+        await User.create(req.body);
+        
+      } else {
+        throw new Error('Passwords do not match.')
+      }
+
       res
         .status(201)
         .set('Location', '/')
         .end()
+      
     } catch (error) {
       res.json({ error: error.msg });
     }
